@@ -19,8 +19,7 @@ sheet = client.open('test').sheet1  # Open the sheet
 bot = telebot.TeleBot(TOKEN)
 
 
-@bot.message_handler(commands=["start", ])
-def start(message):
+def get_buttons():
     markup = types.InlineKeyboardMarkup(row_width=1)
 
     btn1 = types.InlineKeyboardButton("FAQ (частые вопросы)", callback_data="faq")
@@ -28,10 +27,16 @@ def start(message):
     btn3 = types.InlineKeyboardButton("Оставить заявку на воркшоп", callback_data="apply")
 
     markup.add(btn1, btn2, btn3)
+
+    return markup
+
+
+@bot.message_handler(commands=["start", ])
+def start(message):
     bot.reply_to(message,
                  "Желаете записаться на воркшоп по ООП или получить по нему информацию?"
                  "Тогда жмите соответствующую кнопку!",
-                 reply_markup=markup)
+                 reply_markup=get_buttons())
 
 
 WORKSHOP_CONTENT = """
@@ -77,26 +82,37 @@ A: Да, будут предоставлены рекомендуемые к в�
 """
 
 
+def user_exists(user_id):
+    # Search all records in the first column for the user_id
+    user_ids = sheet.col_values(1)  # Assuming user_id is in the first column
+    return str(user_id) in user_ids
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
-    user_id = call.from_user.id
-    username = call.from_user.username or "No Username"  # Some users might not have a username
+    markup = get_buttons()
 
     if call.data == "faq":
-        bot.answer_callback_query(callback_query_id=call.id)
-        bot.send_message(call.message.chat.id, FAQ, parse_mode="Markdown")
-        sheet.append_row([user_id, username, "FAQ"])
-
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        bot.send_message(call.message.chat.id, FAQ, parse_mode="Markdown", reply_markup=markup)
     elif call.data == "program":
-        bot.answer_callback_query(callback_query_id=call.id)
-        bot.send_message(call.message.chat.id, WORKSHOP_CONTENT, parse_mode='Markdown')
-        sheet.append_row([user_id, username, "Program"])
-
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        bot.send_message(call.message.chat.id, WORKSHOP_CONTENT, parse_mode='Markdown', reply_markup=markup)
     elif call.data == "apply":
-        bot.answer_callback_query(callback_query_id=call.id)
-        bot.send_message(call.message.chat.id, "Ваша заявка оставлена! Большое спасибо!"
-                                               "Я скоро вернусь со ссылкой на оплату.")
-        sheet.append_row([user_id, username, "Apply"])
+        user_id = call.from_user.id
+        username = call.from_user.username or "No Username"
+        if not user_exists(user_id):  # Check if user already exists
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+            bot.send_message(call.message.chat.id, "Ваша заявка оставлена! Большое спасибо!"
+                                                   "Я скоро вернусь со ссылкой на оплату.", reply_markup=markup)
+            sheet.append_row([user_id, username, "Apply"])
+        else:
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+            bot.send_message(call.message.chat.id, "Вы уже зарегистрированы.", reply_markup=markup)
 
 
-bot.polling()
+while True:
+    try:
+        bot.polling()
+    except Exception as err:
+        print(err)
