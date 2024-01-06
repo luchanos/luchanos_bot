@@ -127,7 +127,7 @@ def query_handler(call):
             sheet.append_row([user_id, username, "Apply"])
         else:
             bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-            bot.send_message(call.message.chat.id, "Вы уже зарегистрированы.", reply_markup=markup)
+            bot.send_message(call.message.chat.id, "Вы уже оставляли заявку, спасибо! Ожидайте связи)", reply_markup=markup)
 
 
 while True:
