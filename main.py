@@ -122,7 +122,7 @@ def query_handler(call):
         username = call.from_user.username or "No Username"
         if not user_exists(user_id):
             bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-            bot.send_message(call.message.chat.id, "Ваша заявка рпинята! Большое спасибо! "
+            bot.send_message(call.message.chat.id, "Ваша заявка принята! Большое спасибо! "
                                                    "Я скоро вернусь со ссылкой на оплату.", reply_markup=markup)
             sheet.append_row([user_id, username, "OOP", "pending"])
         else:
