@@ -14,7 +14,7 @@ scope = ["https://spreadsheets.google.com/feeds",
          "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name('key.json', scope)
 client = gspread.authorize(creds)
-sheet = client.open('test').sheet1  # Open the sheet
+sheet = client.open('workshops').sheet1  # Open the sheet
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -124,7 +124,7 @@ def query_handler(call):
             bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
             bot.send_message(call.message.chat.id, "Ваша заявка рпинята! Большое спасибо! "
                                                    "Я скоро вернусь со ссылкой на оплату.", reply_markup=markup)
-            sheet.append_row([user_id, username, "Apply"])
+            sheet.append_row([user_id, username, "OOP", "pending"])
         else:
             bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
             bot.send_message(call.message.chat.id, "Вы уже оставляли заявку, спасибо! "
