@@ -12,7 +12,6 @@ TOKEN = env.str("TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 
-# Function to create a calendar keyboard
 def create_calendar(year, month):
     markup = types.InlineKeyboardMarkup()
     # Add month and year row
@@ -41,7 +40,6 @@ def create_calendar(year, month):
     return markup
 
 
-# Function to calculate the next month and year
 def next_month(year, month):
     if month == 12:
         return year + 1, 1
@@ -49,7 +47,6 @@ def next_month(year, month):
         return year, month + 1
 
 
-# Function to calculate the previous month and year
 def prev_month(year, month):
     if month == 1:
         return year - 1, 12
@@ -65,7 +62,6 @@ def start(message):
     bot.send_message(message.chat.id, "Choose a date:", reply_markup=markup)
 
 
-# Handler for calendar callbacks
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data.startswith("book-"):
@@ -85,7 +81,6 @@ def handle_query(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=booking_details)
 
-    # Handle next month navigation
     if call.data.startswith("next-month"):
         year, month = map(int, call.data.split('-')[2:])
         year, month = next_month(year, month)
@@ -93,7 +88,6 @@ def handle_query(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text="Choose a date:", reply_markup=markup)
 
-    # Handle previous month navigation
     elif call.data.startswith("prev-month"):
         year, month = map(int, call.data.split('-')[2:])
         year, month = prev_month(year, month)
