@@ -12,6 +12,14 @@ TOKEN = env.str("TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 
+def create_time_keyboard(selected_date):
+    markup = types.InlineKeyboardMarkup()
+    times = ['10:00', '12:00', '14:00', '16:00']
+    for time in times:
+        markup.add(types.InlineKeyboardButton(time, callback_data=f"datetime-{selected_date}-{time}"))
+    return markup
+
+
 def create_calendar(year, month):
     markup = types.InlineKeyboardMarkup()
     # Add month and year row
@@ -66,18 +74,25 @@ def start(message):
 def handle_query(call):
     if call.data.startswith("book-"):
         _, year, month, day = call.data.split('-')
-        bot.answer_callback_query(call.id, f"Selected date: {day}-{month}-{year}")
-        booked_date = datetime.datetime(year=int(year), month=int(month), day=int(day))
+        bot.answer_callback_query(call.id, f"Selected date: {year}-{month}-{day}")
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text=f"Selected date: {year}-{month}-{day}\nPlease select a time:",
+                              reply_markup=create_time_keyboard(f"{year}-{month}-{day}"))
+    elif call.data.startswith("datetime-"):
+        _, year, month, day, event_time = call.data.split('-')
+        hour, minute = map(int, event_time.split(":"))
+        booked_date = datetime.datetime(year=int(year), month=int(month), day=int(day), hour=hour, minute=minute)
         event_type = "ENGLISH_SPEAKING_CLUB"
         with session_scope() as session:
             event = Event(
-                actual_date=datetime.datetime(year=int(year), month=int(month), day=int(day)),
+                actual_date=booked_date,
                 type=event_type,
                 status="ACTIVE",
             )
             session.add(event)
             session.commit()
-        booking_details = f"You have successfully booked an event {event_type} on {booked_date.strftime('%Y-%m-%d')}."
+        booking_details = f"You have successfully booked an event {event_type} on {booked_date.strftime('%Y-%m-%d')} " \
+                          f"at {hour}:{minute:02d}."
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=booking_details)
 
