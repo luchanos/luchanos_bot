@@ -71,14 +71,19 @@ def handle_query(call):
     if call.data.startswith("book-"):
         _, year, month, day = call.data.split('-')
         bot.answer_callback_query(call.id, f"Selected date: {day}-{month}-{year}")
+        booked_date = datetime.datetime(year=int(year), month=int(month), day=int(day))
+        event_type = "ENGLISH_SPEAKING_CLUB"
         with session_scope() as session:
             event = Event(
                 actual_date=datetime.datetime(year=int(year), month=int(month), day=int(day)),
-                type="ENGLISH_SPEAKING_CLUB",
+                type=event_type,
                 status="ACTIVE",
             )
             session.add(event)
             session.commit()
+        booking_details = f"You have successfully booked an event {event_type} on {booked_date.strftime('%Y-%m-%d')}."
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text=booking_details)
 
     # Handle next month navigation
     if call.data.startswith("next-month"):
