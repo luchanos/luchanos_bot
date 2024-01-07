@@ -1,8 +1,32 @@
 version: '3.8'
 
+volumes:
+  luchanos_tg_bot_db_volume:
+
+networks:
+  luchanos_tg_bot_db_network:
+
 services:
-  telegram-bot:
-    build: .
+#  telegram-bot:
+#    build: .
+#    restart: always
+#    environment:
+#      - TOKEN=your_telegram_bot_token_here
+  luchanos-tg-bot-db:
+    image: postgres:15.4
     restart: always
     environment:
-      - TOKEN=your_telegram_bot_token_here
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - luchanos_tg_bot_db_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d postgres -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - luchanos_tg_bot_db_network
